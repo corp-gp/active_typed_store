@@ -22,6 +22,12 @@ RSpec.describe ActiveTypedStore do
       expect(m.asap).to eq true
     end
 
+    it 'assign false value' do
+      m = TestModel.new(asap: false)
+
+      expect(m.asap).to eq false
+    end
+
     it 'casting for saved model' do
       m = TestModel.new(task_id: '123', notify_at: '2020-02-02 11:11:11')
       m.save!
