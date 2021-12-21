@@ -32,7 +32,7 @@ module ActiveTypedStore
         end
       else
         define_method("#{key}=") do |value|
-          v = value_klass[value]
+          v = value.nil? ? nil : value_klass[value]
           write_store_attribute(store_attribute, key, v)
           self[store_attribute].delete(key) if v.nil?
         end

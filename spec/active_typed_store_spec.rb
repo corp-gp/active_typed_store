@@ -81,7 +81,7 @@ RSpec.describe ActiveTypedStore do
         :params,
         task_id:   Types::Params::Integer,
         notify_at: Types::Params::DateTime,
-        asap:      Types::Bool,
+        asap:      Types::Bool.default(true),
         email:     Types::String.constrained(format: /@/),
       )
 
@@ -96,6 +96,16 @@ RSpec.describe ActiveTypedStore do
 
     it 'raise error when email invalid casting for new model' do
       expect { TestModelDry.new(email: 'test.gmail.com') }.to raise_error(Dry::Types::ConstraintError)
+    end
+
+    it 'works with nil value' do
+      m = TestModelDry.new(asap: nil)
+
+      expect(m.params).to eq({})
+    end
+
+    it 'return default value' do
+      expect(TestModelDry.new.asap).to eq(true)
     end
   end
 end
