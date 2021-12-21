@@ -1,0 +1,18 @@
+inherit_gem:
+  rubocop-gp:
+    - .rubocop.yml
+
+AllCops:
+  TargetRubyVersion: 2.6
+
+Lint/ConstantDefinitionInBlock:
+  Enabled: false
+
+RSpec/LeakyConstantDeclaration:
+  Enabled: false
+
+Rails/ApplicationRecord:
+  Enabled: false
+
+Rails/TimeZone:
+  Enabled: false
