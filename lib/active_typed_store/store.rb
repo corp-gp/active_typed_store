@@ -27,12 +27,14 @@ module ActiveTypedStore
       if value_klass.name.start_with?('ActiveModel::Type::')
         define_method("#{key}=") do |value|
           v = value_klass.new.cast(value)
+          v = v.presence unless v.is_a?(FalseClass)
           write_store_attribute(store_attribute, key, v)
           self[store_attribute].delete(key) if v.nil?
         end
       else
         define_method("#{key}=") do |value|
           v = value.nil? ? nil : value_klass[value]
+          v = v.presence unless v.is_a?(FalseClass)
           write_store_attribute(store_attribute, key, v)
           self[store_attribute].delete(key) if v.nil?
         end

@@ -10,6 +10,7 @@ RSpec.describe ActiveTypedStore do
         task_id:   ActiveModel::Type::Integer,
         notify_at: ActiveModel::Type::DateTime,
         asap:      ActiveModel::Type::Boolean,
+        name:      ActiveModel::Type::String,
       )
 
     end
@@ -26,6 +27,12 @@ RSpec.describe ActiveTypedStore do
       m = TestModel.new(asap: false)
 
       expect(m.asap).to eq false
+    end
+
+    it 'assign blank string' do
+      m = TestModel.new(name: '')
+
+      expect(m.name).to be_nil
     end
 
     it 'casting for saved model' do
@@ -88,16 +95,18 @@ RSpec.describe ActiveTypedStore do
         task_id:   Types::Params::Integer,
         notify_at: Types::Params::DateTime,
         asap:      Types::Bool.default(true),
+        name:      Types::String.optional,
         email:     Types::String.constrained(format: /@/),
       )
 
     end
 
     it 'casting for new model' do
-      m = TestModelDry.new(task_id: '123', notify_at: '2020-02-02 11:11:11', asap: false, email: 'test@gmail.com')
+      m = TestModelDry.new(task_id: '123', notify_at: '2020-02-02 11:11:11', asap: false, email: 'test@gmail.com', name: '')
 
       expect(m.task_id).to eq 123
       expect(m.notify_at).to eq Time.parse('2020-02-02 11:11:11')
+      expect(m.name).to be_nil
     end
 
     it 'raise error when email invalid casting for new model' do
