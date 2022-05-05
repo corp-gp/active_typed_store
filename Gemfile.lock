@@ -20,9 +20,9 @@ PATH
   remote: .
   specs:
     active_typed_store (0.1.0)
-      activemodel (~> 6.0)
-      activerecord (~> 6.0)
-      activesupport (~> 6.0)
+      activemodel
+      activerecord
+      activesupport
 
 GEM
   remote: https://rubygems.org/
@@ -119,6 +119,7 @@ GEM
     zeitwerk (2.5.1)
 
 PLATFORMS
+  x86_64-darwin-21
   x86_64-linux
 
 DEPENDENCIES
