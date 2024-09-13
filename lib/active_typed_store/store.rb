@@ -44,13 +44,21 @@ module ActiveTypedStore
           val = super()
           value_klass.new.cast(val) unless val.nil?
         end
-      elsif value_klass.is_a?(Dry::Types::Default)
+      elsif value_klass.name.start_with?("ActiveModel::Type::")
+        nil # json serialized
+      elsif value_klass.class.name.start_with?("Dry::Types")
         define_method(key) do
           val = super()
           # value_klass.value возвращает default
           # value_klass[nil] для optional типов возвращает не default-значение, а nil
-          val.nil? ? value_klass.value : val
+          if val.nil? && value_klass.is_a?(Dry::Types::Default)
+            value_klass.value
+          else
+            value_klass[val]
+          end
         end
+      else
+        raise "type <#{value_klass}> for field '#{key}' not supported"
       end
     end
   end

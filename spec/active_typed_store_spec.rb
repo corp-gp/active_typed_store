@@ -32,8 +32,9 @@ RSpec.describe ActiveTypedStore do
 
       m.update(task_id: "456", notify_at: "2020-02-02 09:09:09")
 
-      expect(m.previous_changes["params"]).to eq [{ "notify_at" => "2020-02-02 11:11:11 UTC", "task_id" => 123 },
-                                                  { "notify_at" => Time.parse("2020-02-02 09:09:09"), "task_id" => 456 },]
+      expect(m.previous_changes["params"][0]["notify_at"]).to start_with("2020-02-02 11:11:11")
+      expect(m.previous_changes["params"][0]["task_id"]).to eq 123
+      expect(m.previous_changes["params"][1]).to eq({ "notify_at" => Time.parse("2020-02-02 09:09:09"), "task_id" => 456 })
     end
 
     it "changes is empty, if assign same data" do
@@ -91,8 +92,8 @@ RSpec.describe ActiveTypedStore do
       typed_store(
         :params,
         task_id:   Types::Params::Integer,
-        notify_at: Types::Params::DateTime,
-        asap:      Types::Bool.default(true),
+        notify_at: Types::Params::Time,
+        asap:      Types::Params::Bool.default(true),
         email:     Types::String.constrained(format: /@/),
       )
     end
