@@ -11,9 +11,9 @@ RSpec.describe ActiveTypedStore do
     end
 
     it "assign false value" do
-      m = model.new(asap: false)
+      m = model.new(asap: true)
 
-      expect(m.asap).to be false
+      expect(m.asap).to be true
     end
 
     it "casting for saved model" do
@@ -35,6 +35,12 @@ RSpec.describe ActiveTypedStore do
       expect(m.previous_changes["params"][0]["notify_at"]).to start_with("2020-02-02 11:11:11")
       expect(m.previous_changes["params"][0]["task_id"]).to eq 123
       expect(m.previous_changes["params"][1]).to eq({ "notify_at" => Time.parse("2020-02-02 09:09:09"), "task_id" => 456 })
+    end
+
+    it "check *_changed? methods" do
+      m = model.new(task_id: "123")
+      expect(m.task_id_was).to be_nil
+      expect(m.task_id_changed?).to be true
     end
 
     it "changes is empty, if assign same data" do
@@ -80,18 +86,21 @@ RSpec.describe ActiveTypedStore do
       m.update(params: { name: "n" })
       expect(m.name).to eq "n"
     end
+
+    it "return default value" do
+      expect(model.new.asap).to be(false)
+    end
   end
 
   context "when active model type" do
     class TestModel < ActiveRecord::Base
       serialize :params, coder: IndifferentCoder.new(:params, JSON)
-      typed_store(
-        :params,
-        task_id:   ActiveModel::Type::Integer,
-        name:      ActiveModel::Type::String,
-        notify_at: ActiveModel::Type::DateTime,
-        asap:      ActiveModel::Type::Boolean,
-      )
+      typed_store(:params) do
+        attr :task_id,   :integer
+        attr :name,      :string
+        attr :notify_at, :datetime
+        attr :asap,      :boolean, default: false
+      end
     end
 
     include_examples "common examples", TestModel
@@ -106,24 +115,19 @@ RSpec.describe ActiveTypedStore do
       self.table_name = "test_models"
 
       serialize :params, coder: IndifferentCoder.new(:params, JSON)
-      typed_store(
-        :params,
-        task_id:   Types::Params::Integer,
-        name:      Types::Params::String,
-        notify_at: Types::Params::Time,
-        asap:      Types::Params::Bool.default(true),
-        email:     Types::String.constrained(format: /@/),
-      )
+      typed_store(:params) do
+        attr :task_id,   Types::Params::Integer
+        attr :name,      Types::Params::String
+        attr :notify_at, Types::Params::Time
+        attr :asap,      Types::Params::Bool.default(false)
+        attr :email,     Types::String.constrained(format: /@/)
+      end
     end
 
     include_examples "common examples", TestModelDry
 
     it "raise error when email invalid casting for new model" do
       expect { TestModelDry.new(email: "test.gmail.com") }.to raise_error(Dry::Types::ConstraintError)
-    end
-
-    it "return default value" do
-      expect(TestModelDry.new.asap).to be(true)
     end
   end
 end

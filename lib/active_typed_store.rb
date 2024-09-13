@@ -5,5 +5,6 @@ require "active_support"
 
 ActiveSupport.on_load(:active_record) do
   require_relative "active_typed_store/store"
+  require_relative "active_typed_store/attrs"
   ActiveSupport.on_load(:active_record) { extend ActiveTypedStore::Store }
 end
