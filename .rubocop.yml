@@ -16,3 +16,9 @@ Rails/ApplicationRecord:
 
 Rails/TimeZone:
   Enabled: false
+
+Layout/EmptyLinesAroundModuleBody:
+  EnforcedStyle: no_empty_lines
+
+Layout/EmptyLinesAroundClassBody:
+  EnforcedStyle: no_empty_lines

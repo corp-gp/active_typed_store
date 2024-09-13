@@ -1,15 +1,15 @@
 # frozen_string_literal: true
 
-ENV['TZ'] = 'UTC'
+ENV["TZ"] = "UTC"
 
-require 'bundler'
+require "bundler"
 
 Bundler.require :default
-require 'support/active_record'
+require "support/active_record"
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
-  config.example_status_persistence_file_path = '.rspec_status'
+  config.example_status_persistence_file_path = ".rspec_status"
 
   # Disable RSpec exposing methods globally on `Module` and `main`
   config.disable_monkey_patching!

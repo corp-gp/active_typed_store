@@ -2,7 +2,6 @@
 
 module ActiveTypedStore
   module Store
-
     JSON_NOT_SERIALIZED_TYPES = [
       ActiveModel::Type::Date,
       ActiveModel::Type::DateTime,
@@ -14,7 +13,7 @@ module ActiveTypedStore
 
       attrs.each do |key, value_klass|
         key = key.to_s
-        define_method("#{key}?") do
+        define_method(:"#{key}?") do
           read_store_attribute(store_attribute, key).present?
         end
 
@@ -24,14 +23,14 @@ module ActiveTypedStore
     end
 
     def _setter_for_typed_store(store_attribute, key, value_klass)
-      if value_klass.name.start_with?('ActiveModel::Type::')
-        define_method("#{key}=") do |value|
+      if value_klass.name.start_with?("ActiveModel::Type::")
+        define_method(:"#{key}=") do |value|
           v = value_klass.new.cast(value)
           write_store_attribute(store_attribute, key, v)
           self[store_attribute].delete(key) if v.nil?
         end
       else
-        define_method("#{key}=") do |value|
+        define_method(:"#{key}=") do |value|
           v = value.nil? ? nil : value_klass[value]
           write_store_attribute(store_attribute, key, v)
           self[store_attribute].delete(key) if v.nil?
@@ -54,6 +53,5 @@ module ActiveTypedStore
         end
       end
     end
-
   end
 end
