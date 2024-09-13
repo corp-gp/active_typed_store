@@ -62,6 +62,24 @@ RSpec.describe ActiveTypedStore do
 
       expect(m.params).to eq({})
     end
+
+    it "same object id for typed attribute" do
+      m = model.new(params: { notify_at: "2020-02-02 11:11:11" })
+
+      obj_id = m.notify_at.object_id
+      3.times { expect(m.notify_at.object_id).to eq(obj_id) }
+    end
+
+    it "check actual value with modify object" do
+      m = model.create(name: "name")
+      expect(m.name).to eq "name"
+
+      m.name << "123"
+      expect(m.name).to eq "name123"
+
+      m.update(params: { name: "n" })
+      expect(m.name).to eq "n"
+    end
   end
 
   context "when active model type" do
@@ -70,6 +88,7 @@ RSpec.describe ActiveTypedStore do
       typed_store(
         :params,
         task_id:   ActiveModel::Type::Integer,
+        name:      ActiveModel::Type::String,
         notify_at: ActiveModel::Type::DateTime,
         asap:      ActiveModel::Type::Boolean,
       )
@@ -79,8 +98,6 @@ RSpec.describe ActiveTypedStore do
   end
 
   context "when dry-types" do
-    require "dry-types"
-
     module Types
       include Dry.Types()
     end
@@ -92,6 +109,7 @@ RSpec.describe ActiveTypedStore do
       typed_store(
         :params,
         task_id:   Types::Params::Integer,
+        name:      Types::Params::String,
         notify_at: Types::Params::Time,
         asap:      Types::Params::Bool.default(true),
         email:     Types::String.constrained(format: /@/),
