@@ -17,7 +17,9 @@ module ActiveTypedStore
         read_store_attribute(store_attribute, field).present?
       end
 
-      if type.is_a?(Symbol)
+      if type == :json
+        # uses original methods from rails core store_accessor
+      elsif type.is_a?(Symbol)
         value_caster = ActiveModel::Type.lookup(type, **options)
         writer(store_attribute, field, value_caster)
         reader(store_attribute, field, value_caster, default)

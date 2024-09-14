@@ -90,6 +90,11 @@ RSpec.describe ActiveTypedStore do
     it "return default value" do
       expect(model.new.asap).to be(false)
     end
+
+    it "return default value" do
+      m = model.new(params: { settings: { tariff_id: 1, type: "retail" } })
+      expect(m.settings).to eq({ "tariff_id" => 1, "type" => "retail" })
+    end
   end
 
   context "when active model type" do
@@ -100,6 +105,7 @@ RSpec.describe ActiveTypedStore do
         attr :name,      :string
         attr :notify_at, :datetime
         attr :asap,      :boolean, default: false
+        attr :settings,  :json
       end
     end
 
@@ -121,6 +127,7 @@ RSpec.describe ActiveTypedStore do
         attr :notify_at, Types::Params::Time
         attr :asap,      Types::Params::Bool.default(false)
         attr :email,     Types::String.constrained(format: /@/)
+        attr :settings,  Types::Params::Hash
       end
     end
 
