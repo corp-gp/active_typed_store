@@ -12,18 +12,19 @@ module ActiveTypedStore
 
     def attr(field, type, default: nil, **options)
       @fields << field
+      attr_name = store_attribute
 
       store_module.define_method(:"#{field}?") do
-        read_store_attribute(store_attribute, field).present?
+        read_store_attribute(attr_name, field).present?
       end
 
       if type.is_a?(Symbol)
         value_caster = ActiveRecord::Type.lookup(type, **options)
-        writer(store_attribute, field, value_caster)
-        reader(store_attribute, field, value_caster, default)
+        writer(attr_name, field, value_caster)
+        reader(attr_name, field, value_caster, default)
       elsif type.class.name.start_with?("Dry::Types")
-        writer(store_attribute, field, type)
-        reader(store_attribute, field, type, (type.value if type.default?))
+        writer(attr_name, field, type)
+        reader(attr_name, field, type, (type.value if type.default?))
       else
         raise "type <#{type}> for field '#{field}' not supported"
       end

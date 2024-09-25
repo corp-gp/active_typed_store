@@ -31,15 +31,24 @@ class Model < ActiveRecord::Base
     attr :settings,  :json
   end
 end
+
+m = Model.first
+m.task_id = "123" # string
+m.task_id # => 123, int
+m.task_id? # => true, value.present? under the hood
+m.asap? # => false
+m.asap = "yes"
+m.asap # => true
+m.asap? # => true
 ```
 
 `attr(name, type, options)`
 
-- `name` The name of the accessor to the store.
-- `type` A symbol such as `:string` or `:integer`, or a type object to be used for the accessor.
-- `options` (optional) A hash of cast type options such as
+- `name` the name of the accessor to the store
+- `type` a symbol such as `:string` or `:integer`, or a type object to be used for the accessor
+- `options` (optional), a hash of cast type options such as:
   - `precision`, `limit`, `scale` 
-  - `default` The default value to use when no value is provided. Otherwise, the default will be nil.
+  - `default` the default value to use when no value is provided. Otherwise, the default will be nil
   - `array` specifies that the type should be an array
 
 
@@ -79,7 +88,7 @@ compare `active_typed_store` with other gems
 #     active_typed_store:    24318.5 - 1.15x  slower    656                   65
 #        store_attribute:    23748.3 - 1.18x  slower    639                   276
 #            store_model:    23324.4 - 1.20x  slower    595                   857
-#              attr_json:    15541.4 - 1.80x  slower    577 - 1.14x  slower  1195
+#              attr_json:    15541.4 - 1.80x  slower    577 - 1.14x  slower   1195
 #         jsonb_accessor:    15000.1 - 1.86x  slower    626                   324
 ```       
 

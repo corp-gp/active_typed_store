@@ -95,6 +95,14 @@ RSpec.describe ActiveTypedStore do
       m = model.new(params: { settings: { tariff_id: 1, type: "retail" } })
       expect(m.settings).to eq({ "tariff_id" => 1, "type" => "retail" })
     end
+
+    it "predicate methods" do
+      m = model.new(task_id: "123", notify_at: nil)
+
+      expect(m).to be_task_id
+      expect(m).not_to be_notify_at
+      expect(m).not_to be_asap
+    end
   end
 
   context "when active model type" do
