@@ -12,6 +12,7 @@ module ActiveTypedStore
 
     def attr(field, type, default: nil, **options)
       @fields << field
+      field = field.name
       attr_name = store_attribute
 
       store_module.define_method(:"#{field}?") do

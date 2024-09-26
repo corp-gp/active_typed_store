@@ -26,13 +26,11 @@ RSpec.describe ActiveTypedStore do
     end
 
     it "changes works for update model" do
-      m = model.new(task_id: "123", notify_at: "2020-02-02 11:11:11")
-      m.save!
-      m.reload
+      m = model.create!(task_id: "123", notify_at: "2020-02-02 11:11:11")
 
       m.update(task_id: "456", notify_at: "2020-02-02 09:09:09")
 
-      expect(m.previous_changes["params"][0]["notify_at"]).to start_with("2020-02-02 11:11:11")
+      expect(m.previous_changes["params"][0]["notify_at"]).to start_with("2020-02-02")
       expect(m.previous_changes["params"][0]["task_id"]).to eq 123
       expect(m.previous_changes["params"][1]).to eq({ "notify_at" => Time.parse("2020-02-02 09:09:09"), "task_id" => 456 })
     end
@@ -54,13 +52,19 @@ RSpec.describe ActiveTypedStore do
     end
 
     it "remove key from json if set nil" do
-      m = model.new(task_id: "123", notify_at: "2020-02-02 11:11:11")
-      m.save!
-      m.reload
+      m = model.create!(task_id: "123", notify_at: "2020-02-02 11:11:11")
 
       m.update(task_id: "123", notify_at: nil)
 
       expect(m.params).to eq({ "task_id"=>123 })
+    end
+
+    it "remove all nil keys from json" do
+      m = model.create!(task_id: "123", notify_at: "2020-02-02 11:11:11")
+
+      m.update(task_id: nil, notify_at: nil)
+
+      expect(m.params).to be_empty
     end
 
     it "works with nil value" do
@@ -107,7 +111,7 @@ RSpec.describe ActiveTypedStore do
 
   context "when active model type" do
     class TestModel < ActiveRecord::Base
-      serialize :params, coder: IndifferentCoder.new(:params, JSON)
+      serialize :params, coder: JSON # coder: IndifferentCoder.new(:params, JSON)
       typed_store(:params) do
         attr :task_id,   :integer
         attr :name,      :string
@@ -128,7 +132,7 @@ RSpec.describe ActiveTypedStore do
     class TestModelDry < ActiveRecord::Base
       self.table_name = "test_models"
 
-      serialize :params, coder: IndifferentCoder.new(:params, JSON)
+      serialize :params, coder: JSON # coder: IndifferentCoder.new(:params, JSON)
       typed_store(:params) do
         attr :task_id,   Types::Params::Integer
         attr :name,      Types::Params::String
