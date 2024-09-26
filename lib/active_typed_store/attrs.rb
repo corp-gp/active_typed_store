@@ -40,7 +40,7 @@ module ActiveTypedStore
     end
 
     private def reader(store_attribute, field, type, default)
-      ivar_prev_val = :"@__ts_prev_#{field}"
+      ivar_prev  = :"@__ts_prev_#{field}"
       ivar_cache = :"@__ts_cache_#{field}"
       store_module.define_method(field) do
         val = read_store_attribute(store_attribute, field)
@@ -50,10 +50,18 @@ module ActiveTypedStore
         if val.nil? && !default.nil?
           default
         else
-          return instance_variable_get(ivar_cache) if instance_variable_get(ivar_prev_val) == val
+          return instance_variable_get(ivar_cache) if instance_variable_get(ivar_prev) == val
 
-          instance_variable_set(ivar_prev_val, val)
-          instance_variable_set(ivar_cache, type.respond_to?(:cast) ? type.cast(val) : type[val])
+          cache_val =
+            if type.respond_to?(:cast)
+              casted = type.cast(val)
+              casted.eql?(val) ? val : casted
+            else
+              type[val]
+            end
+
+          instance_variable_set(ivar_prev, val)
+          instance_variable_set(ivar_cache, cache_val)
         end
       end
     end

@@ -80,15 +80,26 @@ RSpec.describe ActiveTypedStore do
       3.times { expect(m.notify_at.object_id).to eq(obj_id) }
     end
 
-    it "check actual value with modify object" do
+    it "check actual value when mutate object" do
       m = model.create(name: "name")
       expect(m.name).to eq "name"
 
       m.name << "123"
       expect(m.name).to eq "name123"
+      expect(m.params["name"]).to eq "name123"
 
       m.update(params: { name: "n" })
       expect(m.name).to eq "n"
+    end
+
+    it "sync value with storage" do
+      m = model.create(name: "name")
+
+      m.params["name"] = +"name123"
+      expect(m.name).to eq "name123"
+
+      m.params["name"] << "456"
+      expect(m.name).to eq "name123456"
     end
 
     it "return default value" do
@@ -111,7 +122,7 @@ RSpec.describe ActiveTypedStore do
 
   context "when active model type" do
     class TestModel < ActiveRecord::Base
-      serialize :params, coder: JSON # coder: IndifferentCoder.new(:params, JSON)
+      # serialize :params, coder: JSON # coder: IndifferentCoder.new(:params, JSON)
       typed_store(:params) do
         attr :task_id,   :integer
         attr :name,      :string
@@ -132,7 +143,7 @@ RSpec.describe ActiveTypedStore do
     class TestModelDry < ActiveRecord::Base
       self.table_name = "test_models"
 
-      serialize :params, coder: JSON # coder: IndifferentCoder.new(:params, JSON)
+      # serialize :params, coder: JSON # coder: IndifferentCoder.new(:params, JSON)
       typed_store(:params) do
         attr :task_id,   Types::Params::Integer
         attr :name,      Types::Params::String
