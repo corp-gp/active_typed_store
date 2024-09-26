@@ -80,7 +80,7 @@ RSpec.describe ActiveTypedStore do
       3.times { expect(m.notify_at.object_id).to eq(obj_id) }
     end
 
-    it "check actual value when mutate object" do
+    it "check actual value when mutate model attibute" do
       m = model.create(name: "name")
       expect(m.name).to eq "name"
 
@@ -90,6 +90,14 @@ RSpec.describe ActiveTypedStore do
 
       m.update(params: { name: "n" })
       expect(m.name).to eq "n"
+    end
+
+    it "mutate default" do
+      m = model.create(name: "name")
+      expect(m.title).to eq "T"
+
+      m.title << "i"
+      expect(m.title).to eq "Ti"
     end
 
     it "sync value with storage" do
@@ -124,11 +132,12 @@ RSpec.describe ActiveTypedStore do
     class TestModel < ActiveRecord::Base
       # serialize :params, coder: JSON # coder: IndifferentCoder.new(:params, JSON)
       typed_store(:params) do
-        attr :task_id,   :integer
-        attr :name,      :string
-        attr :notify_at, :datetime
-        attr :asap,      :boolean, default: false
-        attr :settings,  :json
+        attr :task_id,    :integer
+        attr :name,       :string
+        attr :notify_at,  :datetime
+        attr :asap,       :boolean, default: false
+        attr :settings,   :json
+        attr :title,      :string, default: "T"
       end
     end
 
@@ -145,12 +154,13 @@ RSpec.describe ActiveTypedStore do
 
       # serialize :params, coder: JSON # coder: IndifferentCoder.new(:params, JSON)
       typed_store(:params) do
-        attr :task_id,   Types::Params::Integer
-        attr :name,      Types::Params::String
-        attr :notify_at, Types::Params::Time
-        attr :asap,      Types::Params::Bool.default(false)
-        attr :email,     Types::String.constrained(format: /@/)
-        attr :settings,  Types::Params::Hash
+        attr :task_id,    Types::Params::Integer
+        attr :name,       Types::Params::String
+        attr :notify_at,  Types::Params::Time
+        attr :asap,       Types::Params::Bool.default(false)
+        attr :email,      Types::String.constrained(format: /@/)
+        attr :settings,   Types::Params::Hash
+        attr :title,      Types::Params::String.default("T")
       end
     end
 

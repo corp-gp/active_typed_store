@@ -25,6 +25,7 @@ module ActiveTypedStore
         reader(attr_name, field, value_caster, default)
       elsif type.class.name.start_with?("Dry::Types")
         writer(attr_name, field, type)
+        # dry_type[nil] для optional типов возвращает не default-значение, а nil
         reader(attr_name, field, type, (type.value if type.default?))
       else
         raise "type <#{type}> for field '#{field}' not supported"
@@ -44,25 +45,20 @@ module ActiveTypedStore
       ivar_cache = :"@__ts_cache_#{field}"
       store_module.define_method(field) do
         val = read_store_attribute(store_attribute, field)
+        return instance_variable_get(ivar_cache) if instance_variable_get(ivar_prev) == val && !val.nil?
 
-        # dry_type.value возвращает default
-        # dry_type[nil] для optional типов возвращает не default-значение, а nil
-        if val.nil? && !default.nil?
-          default
-        else
-          return instance_variable_get(ivar_cache) if instance_variable_get(ivar_prev) == val
+        cache_val =
+          if val.nil? && !default.nil?
+            write_store_attribute(store_attribute, field, default.dup)
+          elsif type.respond_to?(:cast)
+            casted = type.cast(val)
+            casted.eql?(val) ? val : casted
+          else
+            type[val]
+          end
 
-          cache_val =
-            if type.respond_to?(:cast)
-              casted = type.cast(val)
-              casted.eql?(val) ? val : casted
-            else
-              type[val]
-            end
-
-          instance_variable_set(ivar_prev, val)
-          instance_variable_set(ivar_cache, cache_val)
-        end
+        instance_variable_set(ivar_prev, val)
+        instance_variable_set(ivar_cache, cache_val)
       end
     end
   end
