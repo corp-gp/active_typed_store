@@ -100,6 +100,15 @@ RSpec.describe ActiveTypedStore do
       expect(m.title).to eq "Ti"
     end
 
+    it "check lock" do
+      m = model.create(name: "name")
+      m.title
+
+      m.with_lock { m.save }
+
+      expect(m.title).to eq "T"
+    end
+
     it "sync value with storage" do
       m = model.create(name: "name")
 

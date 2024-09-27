@@ -49,7 +49,10 @@ module ActiveTypedStore
 
         cache_val =
           if val.nil? && !default.nil?
-            write_store_attribute(store_attribute, field, default.dup)
+            is_changed = attribute_changed?(store_attribute)
+            stored_value = self[store_attribute][field] = default.dup
+            clear_attribute_change(store_attribute) unless is_changed
+            stored_value
           elsif type.respond_to?(:cast)
             casted = type.cast(val)
             casted.eql?(val) ? val : casted
