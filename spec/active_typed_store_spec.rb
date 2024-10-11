@@ -135,6 +135,13 @@ RSpec.describe ActiveTypedStore do
       expect(m).not_to be_notify_at
       expect(m).not_to be_asap
     end
+
+    it "hash accesses key by symbol and string methods" do
+      m = model.new(task_id: "123", notify_at: nil)
+
+      expect(m.params[:task_id]).to be 123
+      expect(m.params["task_id"]).to be 123
+    end
   end
 
   context "when active model type" do

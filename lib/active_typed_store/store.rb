@@ -6,7 +6,7 @@ module ActiveTypedStore
       attrs = Attrs.new(store_attribute)
       attrs.instance_eval(&)
 
-      store_accessor store_attribute, attrs.fields
+      store store_attribute, accessors: attrs.fields, coder: JSON
       include attrs.store_module
     end
   end
