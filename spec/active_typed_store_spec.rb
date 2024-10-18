@@ -136,17 +136,33 @@ RSpec.describe ActiveTypedStore do
       expect(m).not_to be_asap
     end
 
-    it "hash accesses key by symbol and string methods" do
-      m = model.new(task_id: "123", notify_at: nil)
+    it "not allows hash accesses by symbol" do
+      m = model.create(task_id: "123", settings: { foo: "bar" })
 
-      expect(m.params[:task_id]).to be 123
-      expect(m.params["task_id"]).to be 123
+      expect(m.params["task_id"]).to eq(123)
+      expect { m.params[:task_id] }.to raise_error(ActiveTypedStore::SymbolKeysDisallowed)
+
+      expect(m.settings["foo"]).to eq("bar")
+      expect(m.params["settings"]["foo"]).to eq("bar")
+      expect { m.settings[:foo] }.to raise_error(ActiveTypedStore::SymbolKeysDisallowed)
+      expect { m.params["settings"][:foo] }.to raise_error(ActiveTypedStore::SymbolKeysDisallowed)
+    end
+
+    describe "configuration" do
+      after(:each) { described_class.config = ActiveTypedStore::Configuration.new }
+
+      it "allows hash access by symbols with disabled hash_safety" do
+        described_class.config.hash_safety = false
+
+        m = model.create(task_id: "123", settings: { foo: "bar" })
+        expect(m.params["task_id"]).to eq(123)
+        expect(m.params[:task_id]).to be_nil
+      end
     end
   end
 
   context "when active model type" do
     class TestModel < ActiveRecord::Base
-      # serialize :params, coder: JSON # coder: IndifferentCoder.new(:params, JSON)
       typed_store(:params) do
         attr :task_id,    :integer
         attr :name,       :string
@@ -168,7 +184,6 @@ RSpec.describe ActiveTypedStore do
     class TestModelDry < ActiveRecord::Base
       self.table_name = "test_models"
 
-      # serialize :params, coder: JSON # coder: IndifferentCoder.new(:params, JSON)
       typed_store(:params) do
         attr :task_id,    Types::Params::Integer
         attr :name,       Types::Params::String
