@@ -22,7 +22,7 @@ GIT
 PATH
   remote: .
   specs:
-    active_typed_store (1.1.0)
+    active_typed_store (1.2.0)
       activemodel
       activerecord
       activesupport
@@ -141,6 +141,7 @@ GEM
 
 PLATFORMS
   arm64-darwin-21
+  arm64-darwin-23
   x86_64-darwin-21
   x86_64-linux
 

@@ -6,7 +6,17 @@ module ActiveTypedStore
       attrs = Attrs.new(store_attribute)
       attrs.instance_eval(&)
 
-      store store_attribute, accessors: attrs.fields, coder: JSON
+      store_accessor store_attribute, attrs.fields
+
+      define_method store_attribute do
+        case ActiveTypedStore.config.hash_safety
+        when :disallow_symbol_keys
+          super().tap { ActiveTypedStore::DisallowSymbolKeys.call!(_1) }
+        else
+          super()
+        end
+      end
+
       include attrs.store_module
     end
   end
