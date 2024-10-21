@@ -151,8 +151,6 @@ RSpec.describe ActiveTypedStore do
 
   context "when active model type" do
     class TestModel < ActiveRecord::Base
-      ActiveTypedStore.config = ActiveTypedStore::Configuration.new
-
       typed_store(:params) do
         attr :task_id,    :integer
         attr :name,       :string
@@ -174,8 +172,6 @@ RSpec.describe ActiveTypedStore do
     class TestModelDry < ActiveRecord::Base
       self.table_name = "test_models"
 
-      ActiveTypedStore.config = ActiveTypedStore::Configuration.new
-
       typed_store(:params) do
         attr :task_id,    Types::Params::Integer
         attr :name,       Types::Params::String
@@ -195,18 +191,23 @@ RSpec.describe ActiveTypedStore do
   end
 
   context "with disabled hash safety" do
-    class TestModelHash < ActiveRecord::Base
-      self.table_name = "test_models"
+    let(:m_klass) do
+      described_class.configure do |config|
+        config.hash_safety = false
+      end
 
-      ActiveTypedStore.config.hash_safety = false
+      Class.new(ActiveRecord::Base) do
+        self.table_name = "test_models"
 
-      typed_store(:params) do
-        attr :task_id,    :integer
-        attr :settings,   :json
+        typed_store(:params) do
+          attr :task_id,    :integer
+          attr :settings,   :json
+        end
       end
     end
+
     it "allows hash access by symbols with disabled hash_safety" do
-      m = TestModelHash.create(task_id: "123", settings: { foo: "bar" })
+      m = m_klass.create(task_id: "123", settings: { foo: "bar" })
       expect(m.params["task_id"]).to eq(123)
       expect(m.params[:task_id]).to be_nil
       expect(m.settings["foo"]).to eq("bar")
