@@ -8,13 +8,16 @@ module ActiveTypedStore
 
       store_accessor store_attribute, attrs.fields
 
-      define_method store_attribute do
-        case ActiveTypedStore.config.hash_safety
-        when :disallow_symbol_keys
+      if ActiveTypedStore.config.hash_safety == :disallow_symbol_keys
+        define_method store_attribute do
           super().tap { ActiveTypedStore::DisallowSymbolKeys.call!(_1) }
-        else
-          super()
         end
+
+        define_method :store_accessor_for do |_store_attribute|
+          ActiveTypedStore::StoreHashAccessor
+        end
+
+        private :store_accessor_for
       end
 
       include attrs.store_module
