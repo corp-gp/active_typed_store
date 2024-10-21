@@ -96,7 +96,7 @@ record[:price] # raises "Symbol keys are not allowed `:foo` (ActiveTypedStore::S
 
 # initializers/active_type_store.rb
 ActiveTypeStore.configure do |config|
-  config.hash_safety = false
+  config.hash_safety = false # default :disallow_symbol_keys
 end
 
 record["price"] # 1
