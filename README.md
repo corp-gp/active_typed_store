@@ -1,6 +1,6 @@
 # ActiveTypedStore
 
-`active_typed_store` is a lightweight (__65 lines of code__) and highly performant gem (see [benchmarks](#benchmarks))
+`active_typed_store` is a lightweight (__105 lines of code__) and highly performant gem (see [benchmarks](#benchmarks))
 designed to help you store and manage typed data in JSON format within database.
 This gem provides a simple, yet powerful way to ensure that your JSON data cast
 to specific types, enabling more structured and reliable use of JSON fields in your Rails models.
@@ -92,7 +92,7 @@ end
 
 record = Model.new(price: 1)
 record["price"] # 1
-record[:price] # raises "Symbol keys are not allowed `:foo` (ActiveTypedStore::SymbolKeysDisallowed)"
+record[:price] # raises "Symbol keys are not allowed `:price` (ActiveTypedStore::SymbolKeysDisallowed)"
 
 # initializers/active_type_store.rb
 ActiveTypeStore.configure do |config|
@@ -106,13 +106,14 @@ record[:price] # nil - isn't the expected behavior for most applications
 ### Benchmarks
 compare `active_typed_store` with other gems
 ```ruby
+# ruby 3.3.5 arm64-darwin24
 #                    gem     getter  i/s                setter i/s            Lines of code
-#  rails (without types):    27930.8                    660                   170
-#     active_typed_store:    24318.5 - 1.15x  slower    656                   65
-#        store_attribute:    23748.3 - 1.18x  slower    639                   276
-#            store_model:    23324.4 - 1.20x  slower    595                   857
-#              attr_json:    15541.4 - 1.80x  slower    577 - 1.14x  slower   1195
-#         jsonb_accessor:    15000.1 - 1.86x  slower    626                   324
+#     active_typed_store:    28502.2                    656                   105
+#  rails (without types):    27350.5                    660                   170
+#        store_attribute:    24592.2 - 1.16x  slower    639                   276
+#            store_model:    22833.6 - 1.25x  slower    595                   857
+#              attr_json:    14000.4 - 2.03x  slower    577 - 1.14x  slower   1195
+#         jsonb_accessor:    13995.4 - 2.04x  slower    626                   324
 ```
 
 ## License
