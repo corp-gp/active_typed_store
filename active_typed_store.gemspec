@@ -8,7 +8,7 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Ermolaev Andrey"]
   spec.email         = ["andruhafirst@yandex.ru"]
 
-  spec.summary       = "Typed store for active records json/hstore columns"
+  spec.summary       = "Typed store for active records json columns (postgresql, mysql, sqlite)"
   spec.homepage      = "https://github.com/corp-gp/active_typed_store"
   spec.license       = "MIT"
   spec.required_ruby_version = ">= 3.1.0"
