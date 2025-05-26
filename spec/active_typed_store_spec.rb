@@ -201,7 +201,7 @@ RSpec.describe ActiveTypedStore do
 
         typed_store(:params) do
           attr :task_id,    :integer
-          attr :settings,   :json
+          attr :settings,   :json, default: {}
         end
       end
     end
@@ -212,6 +212,17 @@ RSpec.describe ActiveTypedStore do
       expect(m.params[:task_id]).to be_nil
       expect(m.settings["foo"]).to eq("bar")
       expect(m.settings[:foo]).to be_nil
+    end
+
+    it "check assign for json field with default value" do
+      m = m_klass.create(task_id: "123")
+
+      m.settings["foo"] = "bar"
+      expect(m.settings["foo"]).to eq("bar")
+
+      m.settings["foo2"] = "bar2"
+      expect(m.settings["foo"]).to eq("bar")
+      expect(m.settings["foo2"]).to eq("bar2")
     end
   end
 end

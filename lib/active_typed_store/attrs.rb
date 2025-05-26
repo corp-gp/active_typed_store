@@ -5,7 +5,7 @@ module ActiveTypedStore
     attr_reader :fields, :store_module, :store_attribute
 
     def initialize(store_attribute)
-      @store_attribute = store_attribute
+      @store_attribute = store_attribute.is_a?(Symbol) ? store_attribute.name : store_attribute
       @fields = []
       @store_module = Module.new
     end
@@ -50,9 +50,14 @@ module ActiveTypedStore
         cache_val =
           if val.nil? && !default.nil?
             is_changed = attribute_changed?(store_attribute)
-            stored_value = self[store_attribute][field] = default.dup
-            clear_attribute_change(store_attribute) unless is_changed
-            stored_value
+            self[store_attribute][field] = default.dup
+
+            if is_changed
+              self[store_attribute][field]
+            else
+              # for discard changes
+              @attributes.write_from_database(store_attribute, self[store_attribute]).value[field]
+            end
           elsif type.respond_to?(:cast)
             casted = type.cast(val)
             casted.eql?(val) ? val : casted
