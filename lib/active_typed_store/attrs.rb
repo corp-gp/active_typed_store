@@ -10,25 +10,51 @@ module ActiveTypedStore
       @store_module = Module.new
     end
 
-    def attr(field, type, default: nil, **options)
-      @fields << field
-      field = field.name
+    def attr(field, type, default: nil, **options, &block)
+      parent_field = field.name
       attr_name = store_attribute
+      @fields << { name: parent_field, default: default}
 
-      store_module.define_method(:"#{field}?") do
-        read_store_attribute(attr_name, field).present?
+      store_module.define_method(:"#{parent_field}?") do
+        read_store_attribute(attr_name, parent_field).present?
       end
 
       if type.is_a?(Symbol)
         value_caster = ActiveRecord::Type.lookup(type, **options)
-        writer(attr_name, field, value_caster)
-        reader(attr_name, field, value_caster, default)
+        writer(attr_name, parent_field, value_caster)
+        reader(attr_name, parent_field, value_caster, default)
       elsif type.class.name.start_with?("Dry::Types")
-        writer(attr_name, field, type)
+        writer(attr_name, parent_field, type)
         # dry_type[nil] для optional типов возвращает не default-значение, а nil
-        reader(attr_name, field, type, (type.value if type.default?))
+        reader(attr_name, parent_field, type, (type.value if type.default?))
       else
-        raise "type <#{type}> for field '#{field}' not supported"
+        raise "type <#{type}> for field '#{field_name}' not supported"
+      end
+
+      if block_given?
+        nested_attrs = self.class.new(attr_name)
+        nested_attrs.instance_eval(&block)
+
+        nested_attrs.fields.each do |nested_field|
+          nested_field = nested_field[:name]
+          method_name = "#{parent_field}_#{nested_field}"
+
+          store_module.define_method(:"#{method_name}?") do
+            read_store_attribute(attr_name, parent_field)&.dig(nested_field).present?
+          end
+
+          store_module.define_method(method_name) do
+            read_store_attribute(attr_name, parent_field)&.dig(nested_field)
+          end
+
+          store_module.define_method(:"#{method_name}=") do |value|
+            current = read_store_attribute(attr_name, parent_field) || {}
+            current[nested_field] = value
+            write_store_attribute(attr_name, parent_field, current)
+          end
+        end
+
+        store_module.include(nested_attrs.store_module)
       end
     end
 
