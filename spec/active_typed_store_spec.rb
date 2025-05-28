@@ -101,8 +101,10 @@ RSpec.describe ActiveTypedStore do
     end
 
     it "check lock" do
-      m = model.create(name: "name")
+      m = model.create(name: "name", notify_at: "2025-01-01")
       m.title
+      m.settings
+      m.notify_at
 
       m.with_lock { m.save }
 
@@ -175,10 +177,10 @@ RSpec.describe ActiveTypedStore do
       typed_store(:params) do
         attr :task_id,    Types::Params::Integer
         attr :name,       Types::Params::String
-        attr :notify_at,  Types::Params::Time
+        attr :notify_at,  Types::Params::DateTime
         attr :asap,       Types::Params::Bool.default(false)
         attr :email,      Types::String.constrained(format: /@/)
-        attr :settings,   Types::Params::Hash
+        attr :settings,   Types::Params::Hash.default({})
         attr :title,      Types::Params::String.default("T")
       end
     end
@@ -210,7 +212,7 @@ RSpec.describe ActiveTypedStore do
       m = m_klass.create(task_id: "123", settings: { foo: "bar" })
       expect(m.params["task_id"]).to eq(123)
       expect(m.params[:task_id]).to be_nil
-      expect(m.settings["foo"]).to eq("bar")
+      expect(m.params["settings"]["foo"]).to eq("bar")
       expect(m.settings[:foo]).to be_nil
     end
 

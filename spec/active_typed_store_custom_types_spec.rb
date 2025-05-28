@@ -14,6 +14,7 @@ RSpec.describe ActiveTypedStore do
         assign_attributes(attributes)
       end
 
+      def inspect = "<Parcel #{attributes.map { |k, v| "#{k}=#{v}" }.join(' ')}>"
       def as_json = attributes.compact
     end
 
@@ -22,7 +23,6 @@ RSpec.describe ActiveTypedStore do
         case value
         when Hash   then Parcel.new(value)
         when Parcel then value
-        else             Parcel.new
         end
       end
     end
@@ -32,8 +32,6 @@ RSpec.describe ActiveTypedStore do
         case value
         when Array
           value.map { _1.is_a?(Parcel) ? _1 : Parcel.new(_1) }
-        else
-          []
         end
       end
     end
@@ -46,8 +44,8 @@ RSpec.describe ActiveTypedStore do
 
       typed_store(:params) do
         attr :task_id,  :integer
-        attr :parcel,   :parcel
-        attr :parcels,  :parcel_array
+        attr :parcel,   :parcel, default: Parcel.new
+        attr :parcels,  :parcel_array, default: []
       end
     end
   end
@@ -75,6 +73,7 @@ RSpec.describe ActiveTypedStore do
     expect(m.params["task_id"]).to eq(123)
     expect(m.parcels[0].height).to eq 0
     expect(m.parcels[0].weight).to eq 2
+    m.with_lock { 1 }
 
     m.parcels[0].weight = "12"
     m.save!
