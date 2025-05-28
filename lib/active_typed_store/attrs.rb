@@ -41,32 +41,41 @@ module ActiveTypedStore
     end
 
     private def reader(store_attribute, field, type, default)
-      ivar_prev  = :"@__ts_prev_#{field}"
-      ivar_cache = :"@__ts_cache_#{field}"
+      ivar_prev = :"@__ts_prev_#{field}"
       store_module.define_method(field) do
         val = read_store_attribute(store_attribute, field)
-        return instance_variable_get(ivar_cache) if instance_variable_get(ivar_prev) == val && !val.nil?
+        return val if instance_variable_get(ivar_prev) == val.object_id && !val.nil?
 
-        cache_val =
+        is_default = false
+        casted_val =
           if val.nil? && !default.nil?
-            is_changed = attribute_changed?(store_attribute)
-            self[store_attribute][field] = default.dup
-
-            if is_changed
-              self[store_attribute][field]
-            else
-              # for discard changes
-              @attributes.write_from_database(store_attribute, self[store_attribute]).value[field]
-            end
+            is_default = true
+            default.dup
           elsif type.respond_to?(:cast)
-            casted = type.cast(val)
-            casted.eql?(val) ? val : casted
+            type.cast(val)
           else
             type[val]
           end
 
-        instance_variable_set(ivar_prev, val)
-        instance_variable_set(ivar_cache, cache_val)
+        return_val =
+          if casted_val.eql?(val)
+            val
+          else
+            is_changed = attribute_changed?(store_attribute)
+
+            # write cast val
+            self[store_attribute][field] = casted_val
+
+            # discard changes
+            if !is_changed && (val == casted_val || is_default)
+              @attributes.write_from_database(store_attribute, self[store_attribute].to_json).value[field]
+            else
+              casted_val
+            end
+          end
+
+        instance_variable_set(ivar_prev, return_val.object_id)
+        return_val
       end
     end
   end

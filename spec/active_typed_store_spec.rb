@@ -218,6 +218,8 @@ RSpec.describe ActiveTypedStore do
       m = m_klass.create(task_id: "123")
 
       m.settings["foo"] = "bar"
+      m.save
+      m.reload
       expect(m.settings["foo"]).to eq("bar")
 
       m.settings["foo2"] = "bar2"
