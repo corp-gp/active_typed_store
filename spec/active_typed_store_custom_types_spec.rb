@@ -55,6 +55,8 @@ RSpec.describe ActiveTypedStore do
     expect(m.params["task_id"]).to eq(123)
     expect(m.parcel.height).to eq 0
     expect(m.parcel.weight).to be_nil
+    expect(m.changed?).to be(false)
+    m.with_lock { 1 }
 
     m.parcel.weight = "12"
     m.save!
@@ -73,6 +75,7 @@ RSpec.describe ActiveTypedStore do
     expect(m.params["task_id"]).to eq(123)
     expect(m.parcels[0].height).to eq 0
     expect(m.parcels[0].weight).to eq 2
+    expect(m.changed?).to be(false)
     m.with_lock { 1 }
 
     m.parcels[0].weight = "12"
