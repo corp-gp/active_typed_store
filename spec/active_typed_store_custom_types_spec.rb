@@ -57,17 +57,20 @@ RSpec.describe ActiveTypedStore do
     expect(m.params["task_id"]).to eq(123)
     expect(m.parcel.height).to eq 0
     expect(m.parcel.weight).to be_nil
+    expect(m.changed?).to eq(false)
 
     m.parcel.weight = "12"
     m.save!
     expect(m.params["task_id"]).to eq(123)
     expect(m.parcel.height).to eq 0
     expect(m.parcel.weight).to eq 12
+    expect(m.changed?).to eq(false)
 
     m.reload
     expect(m.params["task_id"]).to eq(123)
     expect(m.parcel.height).to eq 0
     expect(m.parcel.weight).to eq 12
+    expect(m.changed?).to eq(false)
   end
 
   it "check array of custom type" do
@@ -75,17 +78,20 @@ RSpec.describe ActiveTypedStore do
     expect(m.params["task_id"]).to eq(123)
     expect(m.parcels[0].height).to eq 0
     expect(m.parcels[0].weight).to eq 2
+    expect(m.changed?).to eq(false)
 
     m.parcels[0].weight = "12"
     m.save!
     expect(m.params["task_id"]).to eq(123)
     expect(m.parcels[0].height).to eq 0
     expect(m.parcels[0].weight).to eq 12
+    expect(m.changed?).to eq(false)
 
     m.reload
     expect(m.params["task_id"]).to eq(123)
     expect(m.parcels[0].height).to eq 0
     expect(m.parcels[0].weight).to eq 12
+    expect(m.changed?).to eq(false)
 
     m.parcels << Parcel.new(weight: 33)
     m.save
@@ -94,5 +100,6 @@ RSpec.describe ActiveTypedStore do
     expect(m.params["task_id"]).to eq(123)
     expect(m.parcels[1].height).to eq 0
     expect(m.parcels[1].weight).to eq 33
+    expect(m.changed?).to eq(false)
   end
 end
