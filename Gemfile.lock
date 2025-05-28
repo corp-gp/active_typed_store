@@ -22,7 +22,7 @@ GIT
 PATH
   remote: .
   specs:
-    active_typed_store (1.3.0)
+    active_typed_store (2.1.0)
       activemodel
       activerecord
       activesupport
