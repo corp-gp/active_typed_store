@@ -28,7 +28,8 @@ module ActiveTypedStore
         # dry_type[nil] для optional типов возвращает не default-значение, а nil
         reader(attr_name, field, type, (type.value if type.default?))
       else
-        raise "type <#{type}> for field '#{field}' not supported"
+        writer(attr_name, field, type)
+        reader(attr_name, field, type, default)
       end
     end
 

@@ -36,16 +36,16 @@ RSpec.describe ActiveTypedStore do
       end
     end
 
-    ActiveRecord::Type.register(:parcel, ParcelType)
-    ActiveRecord::Type.register(:parcel_array, ParcelArrayType)
+    # ActiveRecord::Type.register(:parcel, ParcelType)
+    # ActiveRecord::Type.register(:parcel_array, ParcelArrayType)
 
     Class.new(ActiveRecord::Base) do
       self.table_name = "test_models"
 
       typed_store(:params) do
         attr :task_id,  :integer
-        attr :parcel,   :parcel, default: Parcel.new
-        attr :parcels,  :parcel_array, default: []
+        attr :parcel,   ParcelType.new,      default: Parcel.new
+        attr :parcels,  ParcelArrayType.new, default: []
       end
     end
   end
