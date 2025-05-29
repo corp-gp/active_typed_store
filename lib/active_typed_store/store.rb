@@ -14,7 +14,12 @@ module ActiveTypedStore
       attrs = Attrs.new(store_attribute)
       attrs.instance_eval(&)
 
-      define_attribute(store_attribute.name, CUSTOM_JSON)
+      define_singleton_method(:inherited) do |subclass|
+        super(subclass)
+        subclass.define_attribute(store_attribute.name, CUSTOM_JSON)
+      end
+
+      define_attribute store_attribute.name, CUSTOM_JSON
       store_accessor store_attribute, attrs.fields
 
       if ActiveTypedStore.config.hash_safety == :disallow_symbol_keys

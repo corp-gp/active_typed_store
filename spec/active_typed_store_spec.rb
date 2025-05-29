@@ -229,4 +229,25 @@ RSpec.describe ActiveTypedStore do
       expect(m.settings["foo2"]).to eq("bar2")
     end
   end
+
+  context "when model inherited" do
+    let(:m_klass) do
+      parent =
+        Class.new(ActiveRecord::Base) do
+          self.table_name = "test_models"
+
+          typed_store(:params) do
+            attr :notify_at, :datetime
+          end
+        end
+      Class.new(parent)
+    end
+
+    it "check changes" do
+      m = m_klass.create(notify_at: "2025-01-01")
+      expect(m.changed?).to be(false)
+      m.notify_at
+      expect(m.changed?).to be(false)
+    end
+  end
 end
