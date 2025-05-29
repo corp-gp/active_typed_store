@@ -8,16 +8,13 @@ module ActiveTypedStore
       end
     end
 
+    CUSTOM_JSON = CustomJson.new
+
     def typed_store(store_attribute, &)
       attrs = Attrs.new(store_attribute)
       attrs.instance_eval(&)
 
-      # for redefined self._default_attributes
-      def self.type_for_column(connection, column) # rubocop:disable Lint/NestedMethodDefinition
-        return ActiveTypedStore::Store::CustomJson.new if column.name == "params"
-
-        super
-      end
+      define_attribute(store_attribute.name, CUSTOM_JSON)
       store_accessor store_attribute, attrs.fields
 
       if ActiveTypedStore.config.hash_safety == :disallow_symbol_keys
