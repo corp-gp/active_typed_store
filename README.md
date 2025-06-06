@@ -1,6 +1,6 @@
 # ActiveTypedStore
 
-`active_typed_store` is a lightweight (__105 lines of code__) and highly performant gem (see [benchmarks](#benchmarks))
+`active_typed_store` is a lightweight (__~100 lines of code [1](https://github.com/corp-gp/active_typed_store/blob/master/lib/active_typed_store/attrs.rb) [2](https://github.com/corp-gp/active_typed_store/blob/master/lib/active_typed_store/store.rb)__) and highly performant gem (see [benchmarks](#benchmarks))
 designed to help you store and manage typed data in JSON format within database.
 This gem provides a simple, yet powerful way to ensure that your JSON data cast
 to specific types, enabling more structured and reliable use of JSON fields in your Rails models.
@@ -80,6 +80,69 @@ class Model < ActiveRecord::Base
 end
 ```
 
+### Active Values
+
+```ruby
+class Model < ActiveRecord::Base
+  typed_store(:params) do
+    attr :name,    :string
+    attr :parcel,  Parcel::TYPE,      default: Parcel.new
+    attr :parcels, Parcel::ARRAY_TYPE, default: []
+
+    # if types registered in ActiveRecord, you can use as symbol name
+    # ActiveRecord::Type.register(:parcel, ParcelType)
+    # ActiveRecord::Type.register(:parcel_array, ParcelArrayType)
+    # attr :parcel,  :parcel,       default: Parcel.new
+    # attr :parcels, :parcel_array, default: []
+  end
+end
+
+record = Model.new
+record.parcel.weight = 10
+record.parcel.height # => 0 is default value
+record.parcels << Parcel.new(weight: 10, height: 20)
+```
+
+Example Active Value defined class:
+```ruby
+class Parcel
+  include ActiveModel::Attributes
+  include ActiveModel::AttributeAssignment
+
+  attribute :height, :float, default: 0
+  attribute :weight, :float
+
+  def initialize(attributes = {})
+    super()
+    assign_attributes(attributes)
+  end
+
+  def inspect = "<Parcel #{attributes.map { |k, v| "#{k}=#{v}" }.join(' ')}>"
+  def as_json = attributes.compact
+
+  class Type < ActiveRecord::Type::Json
+    def cast(value)
+      case value
+      when Hash   then Parcel.new(value)
+      when Parcel then value
+      end
+    end
+  end
+
+  class ArrayType < ActiveRecord::Type::Json
+    def cast(value)
+      case value
+      when Array then value.map { it.is_a?(Parcel) ? it : Parcel.new(it) }
+      end
+    end
+  end
+  
+  # Memoize types to enable sharing across models or attributes, reducing memory usage and optimizing YJIT warm-up.
+  TYPE = Type.new
+  ARRAY_TYPE = ArrayType.new
+end
+```
+
 ### Hash safety
 This gem assumes you're using a database that supports structured data types, such as `json` in `PostgreSQL` or `MySQL`, and leverages Rails' [store_accessor](https://edgeapi.rubyonrails.org/classes/ActiveRecord/Store.html) under the hood. However, there’s one caveat: JSON columns use a string-keyed hash and don’t support access via symbols. To avoid unexpected errors when accessing the hash, we raise an error if a symbol is used. You can disable this behavior by setting `config.hash_safety = false`.
 
@@ -91,16 +154,16 @@ class Model < ActiveRecord::Base
 end
 
 record = Model.new(price: 1)
-record["price"] # 1
-record[:price] # raises "Symbol keys are not allowed `:price` (ActiveTypedStore::SymbolKeysDisallowed)"
+record.params["price"] # 1
+record.params[:price] # raises "Symbol keys are not allowed `:price` (ActiveTypedStore::SymbolKeysDisallowed)"
 
 # initializers/active_type_store.rb
 ActiveTypeStore.configure do |config|
   config.hash_safety = false # default :disallow_symbol_keys
 end
 
-record["price"] # 1
-record[:price] # nil - isn't the expected behavior for most applications
+record.params["price"] # 1
+record.params[:price] # nil - isn't the expected behavior for most applications
 ```
 
 ### Benchmarks
