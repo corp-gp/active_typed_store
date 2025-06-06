@@ -31,7 +31,7 @@ module ActiveTypedStore
     end
 
     def self.prepare(object, attribute)
-      object.public_send :"#{attribute}=", {} unless object.read_attribute(attribute)
+      object.send :"#{attribute}=", {} unless object.read_attribute(attribute)
     end
   end
 end

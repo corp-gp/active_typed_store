@@ -37,7 +37,7 @@ module ActiveTypedStore
       store_module.define_method(:"#{field}=") do |value|
         v = (type.respond_to?(:cast) ? type.cast(value) : type[value]) unless value.nil?
         write_store_attribute(store_attribute, field, v)
-        self[store_attribute].delete(field) if v.nil?
+        read_attribute(store_attribute).delete(field) if v.nil?
       end
     end
 
@@ -50,18 +50,18 @@ module ActiveTypedStore
         casted_val =
           if val.nil? && !default.nil?
             v = default.dup
-            self[store_attribute][field] = v
+            read_attribute(store_attribute)[field] = v
             clear_attribute_change(store_attribute)
-            self[store_attribute][field] = v
+            read_attribute(store_attribute)[field] = v
           elsif val.nil?
             return nil
           elsif instance_variable_get(ivar_prev).eql?(val)
             return val
           elsif type.respond_to?(:cast)
             casted = type.cast(val)
-            casted.eql?(val) ? val : (self[store_attribute][field] = casted)
+            casted.eql?(val) ? val : (read_attribute(store_attribute)[field] = casted)
           else
-            self[store_attribute][field] = type[val]
+            read_attribute(store_attribute)[field] = type[val]
           end
 
         instance_variable_set(ivar_prev, casted_val)
