@@ -50,8 +50,9 @@ module ActiveTypedStore
         casted_val =
           if val.nil? && !default.nil?
             v = default.dup
+            is_changed = attribute_changed?(store_attribute)
             read_attribute(store_attribute)[field] = v
-            clear_attribute_change(store_attribute)
+            clear_attribute_change(store_attribute) unless is_changed
             read_attribute(store_attribute)[field] = v
           elsif val.nil?
             return nil
