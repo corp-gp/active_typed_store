@@ -97,4 +97,20 @@ RSpec.describe ActiveTypedStore do
     expect(m.parcels[1].height).to eq 0
     expect(m.parcels[1].weight).to eq 33
   end
+
+  it "check cross assign types" do
+    m = m_klass.create(task_id: "123")
+
+    m.parcel.weight = 12
+    expect(m.changed?).to be(true)
+
+    m.parcels
+    expect(m.changed?).to be(true)
+
+    m.save
+    m.reload
+
+    expect(m.parcel.weight).to eq 12
+    expect(m.parcels).to be_empty
+  end
 end
