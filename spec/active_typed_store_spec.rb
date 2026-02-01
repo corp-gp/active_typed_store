@@ -149,6 +149,19 @@ RSpec.describe ActiveTypedStore do
       expect { m.settings[:foo] }.to raise_error(ActiveTypedStore::SymbolKeysDisallowed)
       expect { m.params["settings"][:foo] }.to raise_error(ActiveTypedStore::SymbolKeysDisallowed)
     end
+
+    it "dirty-like methods" do
+      m = model.create(name: "name")
+      m.name = "another name"
+
+      expect(m.name_change).to eq(["name", "another name"])
+      expect(m.name_was).to eq("name")
+
+      m.save!
+      expect(m.saved_change_to_name).to eq(["name", "another name"])
+      expect(m.saved_change_to_name?).to be true
+      expect(m.name_before_last_save).to eq("name")
+    end
   end
 
   context "when active model type" do

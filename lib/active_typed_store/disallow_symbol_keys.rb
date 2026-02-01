@@ -19,7 +19,7 @@ module ActiveTypedStore
 
   # Same interface as ActiveRecord::Store::HashAccessor
   # Optimized by using object.read_attribute(attribute) instead of object.send(attribute)
-  class StoreHashAccessor
+  class StoreHashAccessor < ActiveRecord::Store::StringKeyedHashAccessor
     def self.read(object, attribute, key)
       prepare(object, attribute)
       object.read_attribute(attribute)[key]
