@@ -8,6 +8,7 @@ RSpec.describe ActiveTypedStore do
 
       attribute :height, :float, default: 0
       attribute :weight, :float
+      attribute :cost,   :decimal # :decimal сериализуется в JSON строкой ("1.5")
 
       def initialize(attributes = {})
         super()
@@ -96,6 +97,28 @@ RSpec.describe ActiveTypedStore do
     expect(m.params["task_id"]).to eq(123)
     expect(m.parcels[1].height).to eq 0
     expect(m.parcels[1].weight).to eq 33
+  end
+
+  it "does not dirty the store on read when a field doesn't round-trip byte-for-byte (decimal)" do
+    m = m_klass.create!(parcel: Parcel.new(weight: 3105, cost: 516.0))
+    m.reload
+
+    m.parcel # чтение каста :decimal не должно помечать запись изменённой
+
+    expect(m.changed?).to be(false)
+    expect { m.with_lock { 1 } }.not_to raise_error
+  end
+
+  it "still detects a real change to a decimal field" do
+    m = m_klass.create!(parcel: Parcel.new(weight: 100, cost: 516.0))
+    m.reload
+
+    m.parcel.cost = 999
+    expect(m.changed?).to be(true)
+
+    m.save!
+    m.reload
+    expect(m.parcel.cost).to eq 999
   end
 
   it "check cross assign types" do

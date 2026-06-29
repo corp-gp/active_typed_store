@@ -4,7 +4,7 @@ module ActiveTypedStore
   module Store
     class CustomJson < ActiveRecord::Type::Json
       def changed_in_place?(raw_old_value, new_value)
-        deserialize(raw_old_value) != new_value.as_json
+        deserialize(raw_old_value) != deserialize(serialize(new_value))
       end
     end
 
