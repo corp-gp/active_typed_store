@@ -143,6 +143,31 @@ class Parcel
 end
 ```
 
+### Encrypted store
+
+`encrypted: true` keeps keys of the store readable and encrypts every value like Rails `encrypts`:
+
+```ruby
+class SupplierImportSetting < ActiveRecord::Base
+  typed_store :marketplace_credentials, encrypted: true do
+    attr :wb_token,       :string
+    attr :ozon_token,     :string
+    attr :ozon_client_id, :string
+  end
+end
+
+setting.update!(wb_token: "secret", ozon_client_id: "123")
+# in the database: {"wb_token": "{\"p\":\"...\",\"h\":{...}}", "ozon_client_id": "{\"p\":\"...\",\"h\":{...}}"}
+```
+
+- Values are encrypted by `ActiveRecord::Encryption::EncryptedAttributeType` with the same scheme as `encrypts`:
+  [Active Record Encryption](https://guides.rubyonrails.org/active_record_encryption.html) must be configured,
+  `encrypts` options can be passed instead of `true`: `encrypted: { deterministic: true }`,
+  `encrypted: { previous: { key: "old key" } }`, `encrypted: { support_unencrypted_data: true }`.
+- Any value type is supported: the value is JSON-encoded before encryption.
+- Don't add `encrypts` for the store column or its accessors: it conflicts with typed_store or silently does nothing.
+- Like with `encrypts`, decrypted values are in `changes`, `attributes` and the store hash.
+
 ### Hash safety
 This gem assumes you're using a database that supports structured data types, such as `json` in `PostgreSQL` or `MySQL`, and leverages Rails' [store_accessor](https://edgeapi.rubyonrails.org/classes/ActiveRecord/Store.html) under the hood. However, there’s one caveat: JSON columns use a string-keyed hash and don’t support access via symbols. To avoid unexpected errors when accessing the hash, we raise an error if a symbol is used. You can disable this behavior by setting `config.hash_safety = false`.
 
