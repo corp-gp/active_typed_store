@@ -143,31 +143,6 @@ class Parcel
 end
 ```
 
-### Encrypted store
-
-`encrypted: true` keeps keys of the store readable and encrypts every value like Rails `encrypts`:
-
-```ruby
-class SupplierImportSetting < ActiveRecord::Base
-  typed_store :marketplace_credentials, encrypted: true do
-    attr :wb_token,       :string
-    attr :ozon_token,     :string
-    attr :ozon_client_id, :string
-  end
-end
-
-setting.update!(wb_token: "secret", ozon_client_id: "123")
-# in the database: {"wb_token": "{\"p\":\"...\",\"h\":{...}}", "ozon_client_id": "{\"p\":\"...\",\"h\":{...}}"}
-```
-
-- Values are encrypted by `ActiveRecord::Encryption::EncryptedAttributeType` with the same scheme as `encrypts`:
-  [Active Record Encryption](https://guides.rubyonrails.org/active_record_encryption.html) must be configured,
-  `encrypts` options can be passed instead of `true`: `encrypted: { deterministic: true }`,
-  `encrypted: { previous: { key: "old key" } }`, `encrypted: { support_unencrypted_data: true }`.
-- Any value type is supported: the value is JSON-encoded before encryption.
-- Don't add `encrypts` for the store column or its accessors: it conflicts with typed_store or silently does nothing.
-- Like with `encrypts`, decrypted values are in `changes`, `attributes` and the store hash.
-
 ### Hash safety
 This gem assumes you're using a database that supports structured data types, such as `json` in `PostgreSQL` or `MySQL`, and leverages Rails' [store_accessor](https://edgeapi.rubyonrails.org/classes/ActiveRecord/Store.html) under the hood. However, there’s one caveat: JSON columns use a string-keyed hash and don’t support access via symbols. To avoid unexpected errors when accessing the hash, we raise an error if a symbol is used. You can disable this behavior by setting `config.hash_safety = false`.
 
@@ -190,6 +165,49 @@ end
 record.params["price"] # 1
 record.params[:price] # nil - isn't the expected behavior for most applications
 ```
+
+### Encryption
+
+`active_typed_store` does not encrypt, on purpose: Rails `encrypts` works on whole columns only,
+and per-key encryption inside a JSON store is not a Rails pattern (Lockbox: "encrypt the column
+rather than individual accessors"). Keep secrets (API tokens, credentials) out of `typed_store`
+and use the standard Rails API on a separate `text` column:
+
+```ruby
+class AddCredentialsToModels < ActiveRecord::Migration[8.1]
+  def change
+    add_column :models, :credentials, :text, null: false, default: "{}"
+  end
+end
+```
+
+```ruby
+class Model < ActiveRecord::Base
+  typed_store(:params) do
+    attr :task_id, :integer
+  end
+
+  attribute :credentials, :json
+  store_accessor :credentials, :api_token, :client_id
+  encrypts :credentials
+end
+
+m = Model.create!(api_token: "secret")
+m.api_token # => "secret"
+m.ciphertext_for(:credentials) # => "{\"p\":\"...\",\"h\":{...}}" - no plaintext in the database
+```
+
+Why this exact shape (verified on Rails 8.1 and PostgreSQL):
+
+- `text`, not `jsonb`: the column holds ciphertext, a JSON envelope in `jsonb` only misleads SQL readers.
+- `null: false, default: "{}"`: `encrypts` passes the column default through, so an empty store
+  reads back as `{}` without marking the record dirty.
+- `attribute :json` + `store_accessor`, not `store :credentials, coder: JSON`: `store` serializes
+  an empty hash as `NULL`, which a `NOT NULL` column rejects, and on a nullable column
+  Rails <= 8.1 marks the record dirty on every read.
+
+`previous_changes` still holds the plaintext hash: filter `encrypted_attributes` in audit-log
+libraries (`audited` does, `paper_trail` since 15.0).
 
 ### Benchmarks
 compare `active_typed_store` with other gems

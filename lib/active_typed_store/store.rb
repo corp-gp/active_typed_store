@@ -10,25 +10,16 @@ module ActiveTypedStore
 
     CUSTOM_JSON = CustomJson.new
 
-    def typed_store(store_attribute, encrypted: false, &block)
+    def typed_store(store_attribute, &)
       attrs = Attrs.new(store_attribute)
-      attrs.instance_eval(&block)
-
-      json_type =
-        if encrypted
-          # not required on load: it loads ActiveRecord::Encryption
-          require_relative "encrypted_json"
-          EncryptedJson.new(encrypted == true ? {} : encrypted)
-        else
-          CUSTOM_JSON
-        end
+      attrs.instance_eval(&)
 
       define_singleton_method(:inherited) do |subclass|
         super(subclass)
-        subclass.define_attribute(store_attribute.name, json_type)
+        subclass.define_attribute(store_attribute.name, CUSTOM_JSON)
       end
 
-      define_attribute store_attribute.name, json_type
+      define_attribute store_attribute.name, CUSTOM_JSON
       store_accessor store_attribute, attrs.fields
 
       if ActiveTypedStore.config.hash_safety == :disallow_symbol_keys
